@@ -118,11 +118,11 @@ Solve the following travelling problem using any heuristic search technique. Mar
 
 ```
        (6)        (1)        (3)
-   A ——————— B ——————— D ——————— F
-    \         |  \         |      /
-   (7)\     (2)|   \  (8)  |(7) / (5)
-        \      |      \    |    /
-           C ———————— E
+   A ——————————B ————————————— D ——————— F
+    \          |       \        |       /
+   (7)\     (2)|     (8) \      |(7)  / (5)
+        \      |           \    |    /
+           C —————————————————  E
                 (7)
 ```
 
