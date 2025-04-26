@@ -108,4 +108,84 @@ $D_{i,j} = \{1,2,\dots,9\}$ (or a singleton if pre-filled).
 
 Solving is assigning each $X_{i,j}\in D_{i,j}$ so all constraints hold.
 
+# Travelling Problem with A* Heuristic Search
+
+**Question:**  
+Solve the following travelling problem using any heuristic search technique. Mark the steps to the solution.  
+**Start:** `A`  
+**Destination:** `E`  
+*(Solution must be both cost- and time-effective.)*
+
+```
+       (6)        (1)        (3)
+   A ——————— B ——————— D ——————— F
+    \         |  \         |      /
+   (7)\     (2)|   \  (8)  |(7) / (5)
+        \      |      \    |    /
+           C ———————— E
+                (7)
+```
+
+Edges (with costs in parentheses):
+- **A–B:** 6  **A–C:** 7  **B–C:** 2  
+- **B–D:** 1  **C–D:** 8  
+- **C–E:** 7  **D–E:** 7  
+- **D–F:** 3  **E–F:** 5  
+
+---
+
+# Answer
+
+## 1. Heuristic Choice
+
+We choose an **admissible** & **consistent** heuristic  
+$$
+h(n) = \min\{\text{single‐edge cost from }n\text{ to }E\}.
+$$
+
+| Node | Edges from $n$ to $E$             | $h(n)$ |
+|:----:|:----------------------------------|:------:|
+| E    | —                                 | 0      |
+| C    | C–E = 7                           | 7      |
+| D    | D–E = 7                           | 7      |
+| F    | F–E = 5                           | 5      |
+| B    | B–D–E = 1+7 = 8                   | 8      |
+| A    | min(A–C–E = 7+7, A–B–D–E = 6+1+7) | 14     |
+
+This $h(n)$ never overestimates the true cost and satisfies $h(n)\le c(n,n')+h(n')$.
+
+---
+
+## 2. A* Search Trace
+
+We maintain a **frontier** (min‐heap) ordered by  
+$$
+f(n)=g(n)+h(n),
+$$  
+where $g(n)$ is the cost from `A` to $n$.
+
+| Step | Frontier (node: $g,h,f$)         | Action                                 |
+|:----:|:---------------------------------|:---------------------------------------|
+| 0    | { A: (0,14,$14$) }               | start                                  |
+| 1    | { B: (6,8,$14$),  C: (7,7,$14$) } | expand A → generate B, C               |
+| 2    | { C: (7,7,$14$),  B: (6,8,$14$) } | tie‐break on lower $h$ → expand **C**  |
+|      | { B: (6,8,$14$),  D: (15,7,$22$),  E: (14,0,$14$) } | C → generate D, E |
+| 3    | { E: (14,0,$14$),  B: (6,8,$14$),  D: (15,7,$22$) } | **E** has lowest $f$ → goal reached     |
+
+- **Nodes expanded:** `A`, `C` (only 2 expansions)  
+- **Goal found** when `E` is popped with $f(E)=14$.
+
+---
+
+## 3. Solution Path & Costs
+
+```
+A → C → E
+```
+
+- **Total cost:**  
+  $g(E) = g(C) + \text{cost}(C,E) = 7 + 7 = \mathbf{14}$  
+- **Cost‐optimal:** Yes (no cheaper path exists)  
+- **Time‐efficient:** Yes (only 2 node expansions)  
+```
 
