@@ -187,5 +187,132 @@ A → C → E
   $g(E) = g(C) + \text{cost}(C,E) = 7 + 7 = \mathbf{14}$  
 - **Cost‐optimal:** Yes (no cheaper path exists)  
 - **Time‐efficient:** Yes (only 2 node expansions)  
+
+# Examples of Reasoning & Resolution in First-Order Logic
+
+Below are several classic problems from FOL, each stated succinctly and then solved via either **backward reasoning** or **resolution** after converting to CNF.
+
+---
+
+## 1. Unification in Predicate Logic
+
+**Problem:**  
+In propositional logic a contradiction is easy to spot (look for a pair `L` and `¬L`). In FOL, predicates have arguments and variables, so we need a **unification** algorithm to check if two literals can match under some substitution.
+
+**Solution:**  
+1. **Check predicate symbols**: if they differ (e.g. `tryassassinate(Marcus,Caesar)` vs `hate(Marcus,Caesar)`), unification fails immediately.  
+2. **Match arguments pairwise**:  
+   - If both are the same constant or the same variable, succeed.  
+   - If one is a variable, bind it to the other term (record the substitution).  
+   - Recursively apply recorded substitutions to the rest of the arguments.  
+3. **Fail** if you ever attempt to bind a variable to a term containing that variable (the “occurs check”).  
+
+This procedure finds a **most general unifier (MGU)** when one exists. 
+
+---
+
+## 2. Backward Reasoning: “John Likes Peanuts”
+
+**Given:**  
+1. ∀x [ food(x) → likes(John,x) ]  
+2. food(apple)  
+3. ∀x ∀y [ eats(x,y) ∧ ¬killedby(x,y) → food(y) ]  
+4. eats(Bill,peanuts) ∧ alive(Bill)  
+5. Sue eats everything Bill eats  
+
+**Goal:**  
+```
+likes(John, peanuts)
 ```
 
+**Solution (Backward):**  
+1. To prove `likes(John,peanuts)`, use (1). We need `food(peanuts)`.  
+2. To prove `food(peanuts)`, use (3) with x=Bill, y=peanuts. We require  
+   - `eats(Bill,peanuts)` (given)  
+   - `¬killedby(Bill,peanuts)` ⟹ Bill is alive (given).  
+3. Both premises hold, so `food(peanuts)` is true.  
+4. By (1) we conclude `likes(John,peanuts)`. 
+
+---
+
+## 3. Resolution Example: Marcus Hates Caesar
+
+**Premises (in FOPL):**  
+- A set of background facts and rules (omitted for brevity) from which one must prove  
+  ```
+  hate(Marcus, Caesar).
+  ```
+
+**Solution (Resolution):**  
+1. **Negate** the goal: add `¬hate(Marcus,Caesar)` to the clause set.  
+2. **Convert all premises + the negated goal** to **CNF** (a conjunction of disjunctions).  
+3. **Apply resolution**: repeatedly pick two clauses with complementary literals, resolve them, add the resolvent.  
+4. Eventually derive the **empty clause**, showing a contradiction.  
+
+This confirms `hate(Marcus,Caesar)` must be entailed. 
+
+---
+
+## 4. Resolution Example: Leonardo in a Moderate Climate
+
+**Given:**  
+1. `Painter(Leonardo)`  
+2. `Country(Italy)`  
+3. `LivedIn(Leonardo, Italy)`  
+4. `In(Italy, Europe)`  
+5. `Climate(Europe, moderate)`  
+6. ∀x ∀y [ In(x,y) ∧ Climate(y,moderate) → Climate(x,moderate) ]
+
+**Goal:**  
+```
+∃y [ Painter(Leonardo) ∧ LivedIn(Leonardo,y) ∧ Climate(y,moderate) ]
+```
+
+**Solution (Resolution):**  
+1. **Negate** the goal:  
+   ```
+   ¬∃y (…)  ⟹  ∀y ¬[Painter(Leonardo) ∧ … ∧ Climate(y,moderate)]
+   ⟹  ¬Painter(Leonardo) ∨ ¬LivedIn(Leonardo,y) ∨ ¬Climate(y,moderate).
+2. **Convert** all statements to CNF and **standardize apart**.  
+3. **Instantiate** the universally quantified clauses: set `y = Italy`.  
+4. From `In(Italy,Europe)` and `Climate(Europe,moderate)` plus the general rule (6), derive `Climate(Italy,moderate)`.  
+5. Resolve that with `¬Climate(Italy,moderate)` from the negated goal, and then with the other negated literals to reach the empty clause.  
+
+Hence the original existential goal holds. 
+
+---
+
+## 5. Resolution Example: Does Isaac Know Marcus?
+
+**Given:**  
+∀x [ Roman(x) ∧ know(x, Marcus)
+      → ( hate(x, Caesar)
+          ∨ ( ∀y (∃z hate(y,z)) → thinkcrazy(x,y) )
+        )
+    ]
+Roman(Isaac)
+¬hate(Isaac, Caesar)
+hate(Paulus, Marcus)
+¬thinkcrazy(Isaac, Paulus)
+
+**Goal:**  
+¬know(Isaac, Marcus)
+
+**Solution (Resolution):**  
+1. **Assume** `know(Isaac, Marcus)` (negate the goal).  
+2. **Convert** the implication in the universal rule to CNF, yielding a clause with  
+   `¬Roman(x) ∨ ¬know(x,Marcus) ∨ hate(x,Caesar) ∨ ¬hate(y,z) ∨ thinkcrazy(x,y)`.  
+3. **Substitute** `x = Isaac`; resolve with `Roman(Isaac)` and `¬hate(Isaac,Caesar)` to simplify to  
+   `¬hate(y,z) ∨ thinkcrazy(Isaac,y)`.  
+4. **Substitute** `y = Paulus`; resolve with `¬thinkcrazy(Isaac,Paulus)` and then with `h hate(Paulus,Marcus)` (`z = Marcus`) to derive the empty clause.  
+
+Thus `¬know(Isaac,Marcus)` must be true. 
+
+---
+
+## 6. (Bonus) Resolution Proof Sketch: “John Likes Peanuts”
+
+This combines **backward chaining** and **resolution**:  
+- **Premises** from the earlier backward reasoning example.  
+- **Negate** `likes(John,peanuts)`, convert to CNF, then resolve with the clauses for `food(y) → likes(John,y)` and the derived `food(peanuts)`.  
+- You again derive an empty clause, confirming `likes(John,peanuts)`. 
